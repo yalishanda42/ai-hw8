@@ -44,7 +44,7 @@ class NeuronNode: Node {
 
 /// Neural network containing 1 hidden layer that uses backpropagation.
 public class NeuralNet {
-    var inputLayer: [InputNode]
+    let inputLayer: [InputNode]
     let hiddenLayer: [NeuronNode]
     let outputLayer: [NeuronNode]
     
@@ -52,6 +52,8 @@ public class NeuralNet {
     private static var randomInitialWeight: Double {
         .random(in: -0.05...0.05)
     }
+    
+    private static let weightUpdateFactor = 0.1
     
     public init(inputNodes: Int, hiddenNodes: Int, outputNodes: Int) {
         let inputLayerNodes = Array(repeating: InputNode(), count: inputNodes)
@@ -77,5 +79,58 @@ public class NeuralNet {
             })
         }
         self.outputLayer = outputLayerNodes
+    }
+    
+    public func train(
+        trainingInputs: [[Double]],
+        trainingOutputs: [[Double]],
+        trainingIterations: Int = 10_000
+    ) {
+        assert(trainingInputs.count == trainingOutputs.count, "Training input data not equal to output data!")
+        for _ in 0..<trainingIterations {
+            for (exampleInput, exampleOutput) in zip(trainingInputs, trainingOutputs) {
+                assert(exampleInput.count == inputLayer.count, "Training input features count mismatch!")
+                assert(exampleOutput.count == outputLayer.count, "Training input features count mismatch!")
+                
+                let actualOutputs = predict(exampleInput)
+                let hiddenNodesOutputs = hiddenLayer.map { $0.activate() }
+                
+                // Backpropagate error
+                let outputNodesError = zip(actualOutputs, exampleOutput).map {
+                    $0 * (1 - $0) * (1 + $1)
+                }
+                
+                let hiddenNodesError = hiddenNodesOutputs
+                    .enumerated()
+                    .map { (hiddenNodeIndex, hiddenNodeValue) -> Double in
+                        hiddenNodeValue * (1 - hiddenNodeValue) * Array(0..<outputLayer.count).map { i -> Double in
+                            outputLayer[i].inputs[hiddenNodeIndex].weight * outputNodesError[i]
+                        }.reduce(0, +)
+                    }
+                
+                for (i, outputNode) in outputLayer.enumerated() {
+                    for connection in outputNode.inputs {
+                        let update = NeuralNet.weightUpdateFactor * outputNodesError[i] * connection.node.activate()
+                        connection.weight += update
+                    }
+                }
+                
+                for (i, hiddenNode) in hiddenLayer.enumerated() {
+                    for connection in hiddenNode.inputs {
+                        let update = NeuralNet.weightUpdateFactor * hiddenNodesError[i] * connection.node.activate()
+                        connection.weight += update
+                    }
+                }
+            }
+        }
+    }
+    
+    public func predict(_ input: [Double]) -> [Double] {
+        assert(input.count == inputLayer.count, "Input features count mismatch!")
+        for (inputNode, value) in zip(inputLayer, input) {
+            inputNode.value = value
+        }
+        
+        return outputLayer.map { $0.activate() }
     }
 }
