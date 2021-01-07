@@ -20,19 +20,15 @@ final class NeuralNetworkTests: XCTestCase {
         XCTAssertEqual(nn.inputLayer.count, 2)
         XCTAssertEqual(nn.hiddenLayer.count, 0)
         XCTAssertEqual(nn.outputLayer.count, 1)
-        XCTAssertEqual(nn.outputLayer[0].inputs.count, 2)
+        XCTAssert(nn.outputLayer[0].inputs[0].node === nn.inputLayer[0])
+        XCTAssert(nn.outputLayer[0].inputs[1].node === nn.inputLayer[1])
     }
     
     func testNNInitConnectionsCountCorrect() {
         let nn = NeuralNet(inputNodes: 2, hiddenNodes: 4, outputNodes: 1)
         XCTAssertEqual(nn.inputLayer.count, 2)
         XCTAssertEqual(nn.hiddenLayer.count, 4)
-        XCTAssertEqual(nn.hiddenLayer[0].inputs.count, 2)
-        XCTAssertEqual(nn.hiddenLayer[1].inputs.count, 2)
-        XCTAssertEqual(nn.hiddenLayer[2].inputs.count, 2)
-        XCTAssertEqual(nn.hiddenLayer[3].inputs.count, 2)
         XCTAssertEqual(nn.outputLayer.count, 1)
-        XCTAssertEqual(nn.outputLayer[0].inputs.count, 4)
     }
     
     func testNNInitReferencesAndOrderAreCorrect() {

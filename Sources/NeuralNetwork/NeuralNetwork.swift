@@ -28,6 +28,10 @@ class Connection {
     }
 }
 
+class BiasNode: Node {
+    func activate() -> Double { 1.0 }
+}
+
 class NeuronNode: Node {
     let inputs: [Connection]
     
@@ -64,7 +68,7 @@ public class NeuralNet {
                     node: inpnode,
                     weight: NeuralNet.randomInitialWeight
                 )
-            })
+            } + [Connection(node: BiasNode(), weight: NeuralNet.randomInitialWeight)])
         }
         self.hiddenLayer = hiddenLayerNodes
         let outputLayerInputNodes: [Node] = hiddenLayerNodes.isEmpty
@@ -76,7 +80,7 @@ public class NeuralNet {
                     node: inpnode,
                     weight: NeuralNet.randomInitialWeight
                 )
-            })
+            } + [Connection(node: BiasNode(), weight: NeuralNet.randomInitialWeight)])
         }
         self.outputLayer = outputLayerNodes
     }
