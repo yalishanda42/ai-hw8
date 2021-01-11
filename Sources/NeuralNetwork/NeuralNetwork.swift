@@ -29,7 +29,13 @@ class Connection {
 }
 
 class BiasNode: Node {
-    func activate() -> Double { 1.0 }
+    let bias: Double
+    
+    init(_ bias: Double) {
+        self.bias = bias
+    }
+    
+    func activate() -> Double { bias }
 }
 
 class NeuronNode: Node {
@@ -59,29 +65,16 @@ public class NeuralNet {
     
     private static let weightUpdateFactor = 0.1
     
-    public init(inputNodes: Int, hiddenNodes: Int, outputNodes: Int) {
+    public init(inputNodes: Int, hiddenNodes: Int, outputNodes: Int, bias: Double? = nil) {
         let inputLayerNodes = Array(repeating: InputNode(), count: inputNodes)
         self.inputLayer = inputLayerNodes
-        let hiddenLayerNodes =  Array(0..<hiddenNodes).map { _ in
-            NeuronNode(inputs: inputLayerNodes.map { inpnode in
-                Connection(
-                    node: inpnode,
-                    weight: NeuralNet.randomInitialWeight
-                )
-            } + [Connection(node: BiasNode(), weight: NeuralNet.randomInitialWeight)])
-        }
+        let hiddenLayerNodes = NeuralNet.initializeNeuronNodeLayer(nodesCount: hiddenNodes, inputLayer: inputLayerNodes, bias: bias)
         self.hiddenLayer = hiddenLayerNodes
         let outputLayerInputNodes: [Node] = hiddenLayerNodes.isEmpty
             ? inputLayerNodes
             : hiddenLayerNodes
-        let outputLayerNodes = Array(0..<outputNodes).map { _ in
-            NeuronNode(inputs: outputLayerInputNodes.map { inpnode in
-                Connection(
-                    node: inpnode,
-                    weight: NeuralNet.randomInitialWeight
-                )
-            } + [Connection(node: BiasNode(), weight: NeuralNet.randomInitialWeight)])
-        }
+        let outputLayerNodes = NeuralNet.initializeNeuronNodeLayer(nodesCount: outputNodes, inputLayer: outputLayerInputNodes, bias: bias)
+        
         self.outputLayer = outputLayerNodes
     }
     
@@ -136,5 +129,26 @@ public class NeuralNet {
         }
         
         return outputLayer.map { $0.activate() }
+    }
+}
+
+// MARK: - Helpers
+
+private extension NeuralNet {
+    class func initializeNeuronNodeLayer(nodesCount: Int, inputLayer: [Node], bias: Double?) -> [NeuronNode] {
+        Array(0..<nodesCount).map { _ in
+            NeuronNode(
+                inputs: [Node](
+                    inputLayer + [bias]
+                                    .compactMap{ b in b }
+                                    .compactMap { b in BiasNode(b)}
+                    ).map { inputNode in
+                        Connection(
+                            node: inputNode,
+                            weight: NeuralNet.randomInitialWeight
+                        )
+                    }
+            )
+        }
     }
 }
