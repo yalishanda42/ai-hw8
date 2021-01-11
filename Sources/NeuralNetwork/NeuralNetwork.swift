@@ -40,15 +40,18 @@ class BiasNode: Node {
 
 class NeuronNode: Node {
     let inputs: [Connection]
+    let activationFunction: (Double) -> Double
     
-    init(inputs: [Connection]) {
+    init(inputs: [Connection], activationFunction: @escaping (Double) -> Double = sigmoid(_:)) {
         self.inputs = inputs
+        self.activationFunction = activationFunction
     }
+    
     func activate() -> Double {
         let sum = inputs
             .map { $0.node.activate() * $0.weight }
             .reduce(0, +)
-        return sigmoid(sum)
+        return activationFunction(sum)
     }
 }
 
