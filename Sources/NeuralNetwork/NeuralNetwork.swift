@@ -106,7 +106,7 @@ public class NeuralNet {
                 
                 // Calculate error
                 let outputNodesError = zip(actualOutputs, exampleOutput).map {
-                    $0 * (1 - $0) * (1 + $1)
+                    $0 * (1 - $0) * ($1 - $0)
                 }
                 
                 let hiddenNodesError = hiddenNodesOutputs
